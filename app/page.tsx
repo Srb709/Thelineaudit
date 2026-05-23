@@ -59,23 +59,32 @@ export default function HomePage() {
     setError("");
 
     const endpoint = kind === "morning" ? "/api/morning" : kind === "manual" ? "/api/manual" : "/api/due";
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 75_000);
 
     try {
       const response = await fetch(`${endpoint}?secret=${encodeURIComponent(savedSecret)}`, {
         method: kind === "manual" ? "POST" : "GET",
+        signal: controller.signal,
         headers: { "content-type": "application/json" },
         body: kind === "manual" ? JSON.stringify({ context: manualContext }) : undefined,
       });
-      const json = await response.json();
+      const json = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(json?.error || "Audit failed.");
+        throw new Error(json?.error || "Audit failed before it could save a report.");
       }
 
       await loadDashboard(savedSecret);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Audit failed.");
+      const message = err instanceof Error && err.name === "AbortError"
+        ? "Scan timed out in the browser. The button has been reset. Try Manual Refresh with a narrower question or wait 60 seconds and reload."
+        : err instanceof Error
+          ? err.message
+          : "Audit failed.";
+      setError(message);
     } finally {
+      window.clearTimeout(timeout);
       setRunning(null);
     }
   }
@@ -186,7 +195,7 @@ export default function HomePage() {
         <button className="btn secondary" style={{ width: "100%", marginTop: 10 }} onClick={() => triggerAudit("manual")} disabled={!!running}>
           {running === "manual" ? "Refreshing..." : "Manual Refresh"}
         </button>
-        <button className="tab" style={{ width: "100%", marginTop: 10 }} onClick={() => loadDashboard(savedSecret)} disabled={loading}>
+        <button className="tab" style={{ width: "100%", marginTop: 10 }} onClick={() => loadDashboard(savedSecret)} disabled={loading || !!running}>
           {loading ? "Loading..." : "Reload Dashboard"}
         </button>
         {error ? <p className="small" style={{ color: "#ff7272", marginTop: 10 }}>{error}</p> : null}
