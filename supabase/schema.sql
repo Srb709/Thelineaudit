@@ -98,17 +98,22 @@ alter table picks enable row level security;
 alter table line_snapshots enable row level security;
 alter table tweet_drafts enable row level security;
 
-create policy if not exists "Service role can manage audit_runs" on audit_runs
+drop policy if exists "Service role can manage audit_runs" on audit_runs;
+create policy "Service role can manage audit_runs" on audit_runs
   for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
-create policy if not exists "Service role can manage games" on games
+drop policy if exists "Service role can manage games" on games;
+create policy "Service role can manage games" on games
   for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
-create policy if not exists "Service role can manage picks" on picks
+drop policy if exists "Service role can manage picks" on picks;
+create policy "Service role can manage picks" on picks
   for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
-create policy if not exists "Service role can manage line_snapshots" on line_snapshots
+drop policy if exists "Service role can manage line_snapshots" on line_snapshots;
+create policy "Service role can manage line_snapshots" on line_snapshots
   for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
-create policy if not exists "Service role can manage tweet_drafts" on tweet_drafts
+drop policy if exists "Service role can manage tweet_drafts" on tweet_drafts;
+create policy "Service role can manage tweet_drafts" on tweet_drafts
   for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
