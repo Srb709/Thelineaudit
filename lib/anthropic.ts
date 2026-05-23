@@ -1,5 +1,6 @@
 import { jsonrepair } from "jsonrepair";
 import type { AuditReport } from "@/types";
+import { getEasternDate, getEasternDateTime } from "./time";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 
@@ -11,9 +12,32 @@ export async function runClaudeAudit(prompt: string): Promise<AuditReport> {
   }
 
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
-  const maxWebSearches = Number(process.env.MAX_WEB_SEARCHES_PER_RUN || "3");
-  const maxTokens = Number(process.env.ANTHROPIC_MAX_TOKENS || "2200");
-  const timeoutMs = Number(process.env.ANTHROPIC_TIMEOUT_MS || "55000");
+  const requestedSearches = Number(process.env.MAX_WEB_SEARCHES_PER_RUN || "1");
+  const maxWebSearches = Math.max(0, Math.min(requestedSearches, 1));
+  const maxTokens = Math.min(Number(process.env.ANTHROPIC_MAX_TOKENS || "1200"), 1200);
+  const timeoutMs = Math.min(Number(process.env.ANTHROPIC_TIMEOUT_MS || "45000"), 45000);
+
+  const body: Record<string, unknown> = {
+    model,
+    max_tokens: maxTokens,
+    temperature: 0,
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  };
+
+  if (maxWebSearches > 0) {
+    body.tools = [
+      {
+        type: "web_search_20250305",
+        name: "web_search",
+        max_uses: maxWebSearches,
+      },
+    ];
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -29,28 +53,11 @@ export async function runClaudeAudit(prompt: string): Promise<AuditReport> {
         "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
       },
-      body: JSON.stringify({
-        model,
-        max_tokens: maxTokens,
-        temperature: 0,
-        tools: [
-          {
-            type: "web_search_20250305",
-            name: "web_search",
-            max_uses: maxWebSearches,
-          },
-        ],
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      }),
+      body: JSON.stringify(body),
     });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error("Claude scan timed out. Lower MAX_WEB_SEARCHES_PER_RUN or try Manual Refresh with a narrower question.");
+      return buildFallbackReport("Claude scan timed out before it could return a report.");
     }
     throw error;
   } finally {
@@ -59,6 +66,11 @@ export async function runClaudeAudit(prompt: string): Promise<AuditReport> {
 
   if (!response.ok) {
     const errorText = await response.text();
+
+    if (response.status === 429) {
+      return buildFallbackReport("Anthropic rate limit hit. The app is connected, but the Claude account needs a smaller scan or higher API limits before full web research will work.");
+    }
+
     throw new Error(`Anthropic request failed: ${response.status} ${errorText}`);
   }
 
@@ -110,4 +122,44 @@ function parseAuditJson(text: string): AuditReport {
       throw new Error(`Claude returned malformed JSON and repair failed: ${message}`);
     }
   }
+}
+
+function buildFallbackReport(reason: string): AuditReport {
+  return {
+    run_type: "manual",
+    slate_date: getEasternDate(),
+    generated_at_et: getEasternDateTime(),
+    headline: "Scan blocked by Claude API limit",
+    bankroll_note: "No official plays. Do not bet from this failed scan.",
+    games: [],
+    picks: [
+      {
+        sport: "SYSTEM",
+        league: "SYSTEM",
+        matchup: "TheLineAudit API check",
+        bet_type: "Status",
+        pick: "No bet",
+        current_line: "N/A",
+        best_price_found: null,
+        target_price: "N/A",
+        kill_price: "N/A",
+        status: "pass",
+        confidence_grade: "D",
+        stake_units: 0,
+        reason_to_bet: "No bet. The scan did not complete.",
+        steelman_against: reason,
+        line_movement_note: null,
+        injury_weather_note: null,
+        sources: ["Anthropic API"],
+      },
+    ],
+    tweet_drafts: [
+      {
+        draft_type: "lesson",
+        tweet_text: "Sharp betting rule: no number is worth forcing. If the data feed or research process is broken, pass. Process > action.",
+      },
+    ],
+    sharp_notes: [reason, "The app successfully handled the failure instead of spinning forever."],
+    sources: ["Anthropic API"],
+  };
 }
