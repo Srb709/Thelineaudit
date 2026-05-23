@@ -9,7 +9,7 @@ export async function runClaudeAudit(prompt: string): Promise<AuditReport> {
     throw new Error("Missing ANTHROPIC_API_KEY environment variable.");
   }
 
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5";
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
   const maxWebSearches = Number(process.env.MAX_WEB_SEARCHES_PER_RUN || "12");
 
   const response = await fetch(ANTHROPIC_API_URL, {
