@@ -10,35 +10,51 @@ export async function runClaudeAudit(prompt: string): Promise<AuditReport> {
   }
 
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
-  const maxWebSearches = Number(process.env.MAX_WEB_SEARCHES_PER_RUN || "8");
-  const maxTokens = Number(process.env.ANTHROPIC_MAX_TOKENS || "3500");
+  const maxWebSearches = Number(process.env.MAX_WEB_SEARCHES_PER_RUN || "3");
+  const maxTokens = Number(process.env.ANTHROPIC_MAX_TOKENS || "1800");
+  const timeoutMs = Number(process.env.ANTHROPIC_TIMEOUT_MS || "55000");
 
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      temperature: 0.2,
-      tools: [
-        {
-          type: "web_search_20250305",
-          name: "web_search",
-          max_uses: maxWebSearches,
-        },
-      ],
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response: Response;
+
+  try {
+    response = await fetch(ANTHROPIC_API_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        temperature: 0.2,
+        tools: [
+          {
+            type: "web_search_20250305",
+            name: "web_search",
+            max_uses: maxWebSearches,
+          },
+        ],
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      }),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("Claude scan timed out. Lower MAX_WEB_SEARCHES_PER_RUN or try Manual Refresh with a narrower question.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
