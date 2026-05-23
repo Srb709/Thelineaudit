@@ -1,3 +1,4 @@
+import { jsonrepair } from "jsonrepair";
 import type { AuditReport } from "@/types";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
@@ -11,7 +12,7 @@ export async function runClaudeAudit(prompt: string): Promise<AuditReport> {
 
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
   const maxWebSearches = Number(process.env.MAX_WEB_SEARCHES_PER_RUN || "3");
-  const maxTokens = Number(process.env.ANTHROPIC_MAX_TOKENS || "1800");
+  const maxTokens = Number(process.env.ANTHROPIC_MAX_TOKENS || "2200");
   const timeoutMs = Number(process.env.ANTHROPIC_TIMEOUT_MS || "55000");
 
   const controller = new AbortController();
@@ -31,7 +32,7 @@ export async function runClaudeAudit(prompt: string): Promise<AuditReport> {
       body: JSON.stringify({
         model,
         max_tokens: maxTokens,
-        temperature: 0.2,
+        temperature: 0,
         tools: [
           {
             type: "web_search_20250305",
@@ -98,5 +99,15 @@ function parseAuditJson(text: string): AuditReport {
   }
 
   const jsonText = cleaned.slice(firstBrace, lastBrace + 1);
-  return JSON.parse(jsonText) as AuditReport;
+
+  try {
+    return JSON.parse(jsonText) as AuditReport;
+  } catch {
+    try {
+      return JSON.parse(jsonrepair(jsonText)) as AuditReport;
+    } catch (repairError) {
+      const message = repairError instanceof Error ? repairError.message : "Unknown JSON repair error";
+      throw new Error(`Claude returned malformed JSON and repair failed: ${message}`);
+    }
+  }
 }
