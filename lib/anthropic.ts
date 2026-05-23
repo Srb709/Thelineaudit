@@ -10,7 +10,8 @@ export async function runClaudeAudit(prompt: string): Promise<AuditReport> {
   }
 
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
-  const maxWebSearches = Number(process.env.MAX_WEB_SEARCHES_PER_RUN || "12");
+  const maxWebSearches = Number(process.env.MAX_WEB_SEARCHES_PER_RUN || "8");
+  const maxTokens = Number(process.env.ANTHROPIC_MAX_TOKENS || "3500");
 
   const response = await fetch(ANTHROPIC_API_URL, {
     method: "POST",
@@ -21,8 +22,8 @@ export async function runClaudeAudit(prompt: string): Promise<AuditReport> {
     },
     body: JSON.stringify({
       model,
-      max_tokens: 7000,
-      temperature: 0.25,
+      max_tokens: maxTokens,
+      temperature: 0.2,
       tools: [
         {
           type: "web_search_20250305",
