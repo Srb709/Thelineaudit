@@ -25,10 +25,18 @@ export function getPregameCheckTimes(gameTimeUtc: string | null | undefined) {
   const firstPitch = new Date(gameTimeUtc);
   if (Number.isNaN(firstPitch.getTime())) return [];
 
-  const offsets = [180, 90, 25];
-  const now = new Date().getTime();
+  const checkOffsetsInMinutes = [180, 90, 25];
+  const now = Date.now();
 
-  return offsets
+  return checkOffsetsInMinutes
     .map((minutes) => new Date(firstPitch.getTime() - minutes * 60_000))
     .filter((time) => time.getTime() > now);
+}
+
+export function getNextPregameCheck(gameTimeUtc: string | null | undefined) {
+  return getPregameCheckTimes(gameTimeUtc)[0] || null;
+}
+
+export function isoOrNull(date: Date | null) {
+  return date ? date.toISOString() : null;
 }
