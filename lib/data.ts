@@ -1,5 +1,5 @@
 const SUPABASE_URL = "https://jghdunallqvaejbfhouz.supabase.co";
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXAiLCJyZWYiOiJqZ2hkdW5hbGxxdmFlamJmaG91eiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzg4NDY4MjM2LCJleHAiOjIxMDQwNDQyMzZ9.fZncGcVwEo1Ipaz1802_Ac85Xr9YQeLvPBiaEn50QIU";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnaGR1bmFsbHF2YWVqYmZob3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0NjgyMzYsImV4cCI6MjEwNDA0NDIzNn0.fZncGcVwEo1Ipaz1802_Ac85Xr9YQeLvPBiaEn50QIU";
 
 export type PublicBet = {
   id: string;
