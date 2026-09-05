@@ -13,8 +13,8 @@ export default async function HomePage() {
     <main>
       <section className="hero">
         <span className="eyebrow">TODAY&apos;S BOARD</span>
-        <h1>The card, without the noise.</h1>
-        <p>Official plays only. Posted, tracked and graded in public.</p>
+        <h1>Today&apos;s official plays.</h1>
+        <p>Every bet posted, tracked and graded in public.</p>
       </section>
 
       <div className="stat-grid three">
