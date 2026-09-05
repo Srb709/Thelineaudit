@@ -8,7 +8,8 @@ export default async function AllTimePage() {
   const wins = bets.filter((bet) => bet.status === "win").length;
   const losses = bets.filter((bet) => bet.status === "loss").length;
   const pushes = bets.filter((bet) => bet.status === "push").length;
-  const winRate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
+  const graded = wins + losses + pushes;
+  const winRate = graded > 0 ? Math.round((wins / graded) * 100) : 0;
 
   const bySport = Array.from(new Set(bets.map((bet) => bet.sport)))
     .map((sport) => {
