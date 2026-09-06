@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatDate, formatOdds, formatUnits, getPublicBets } from "@/lib/data";
+import { manualGradeBet } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,22 @@ export default async function BetDetailPage({ params }: { params: Promise<{ id: 
         </div>
         {bet.final_score ? <div className="final"><span>Final</span><strong>{bet.final_score}</strong></div> : null}
         {bet.grading_source ? <footer>{bet.grading_source}</footer> : null}
+      </section>
+
+      <section className="owner-grade-card">
+        <div>
+          <span className="eyebrow">OWNER CONTROL</span>
+          <h2>Correct result</h2>
+          <p>If automation misses one, fix it here. Your manual result overrides the grader.</p>
+        </div>
+        <form action={manualGradeBet} className="grade-actions">
+          <input type="hidden" name="id" value={bet.id} />
+          <button type="submit" name="result" value="win" className="grade-win">Win</button>
+          <button type="submit" name="result" value="loss" className="grade-loss">Loss</button>
+          <button type="submit" name="result" value="push">Push</button>
+          <button type="submit" name="result" value="void">Void</button>
+          <button type="submit" name="result" value="auto" className="grade-auto">Return to auto grading</button>
+        </form>
       </section>
 
       {bet.post_text ? (
