@@ -1,12 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isOwner } from "@/lib/owner";
 
 const SUPABASE_URL = "https://jghdunallqvaejbfhouz.supabase.co";
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXAiLCJyZWYiOiJqZ2hkdW5hbGxxdmFlamJmaG91eiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzg4NDY4MjM2LCJleHAiOjIxMDQwNDQyMzZ9.fZncGcVwEo1Ipaz1802_Ac85Xr9YQeLvPBiaEn50QIU";
 const MANUAL_GRADE_KEY = "854c3368b5b95f3e224f83ccd5f74415";
 
 export async function manualGradeBet(formData: FormData) {
+  if (!(await isOwner())) {
+    throw new Error("Owner access required.");
+  }
+
   const id = String(formData.get("id") || "");
   const result = String(formData.get("result") || "").toLowerCase();
 
