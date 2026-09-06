@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatDate, formatOdds, formatUnits, getPublicBets } from "@/lib/data";
 import { manualGradeBet } from "./actions";
+import { isOwner } from "@/lib/owner";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export default async function BetDetailPage({ params }: { params: Promise<{ id: 
   const bets = await getPublicBets();
   const bet = bets.find((item) => item.id === id);
   if (!bet) notFound();
+  const owner = await isOwner();
 
   return (
     <main>
@@ -31,21 +33,23 @@ export default async function BetDetailPage({ params }: { params: Promise<{ id: 
         {bet.grading_source ? <footer>{bet.grading_source}</footer> : null}
       </section>
 
-      <section className="owner-grade-card">
-        <div>
-          <span className="eyebrow">OWNER CONTROL</span>
-          <h2>Correct result</h2>
-          <p>If automation misses one, fix it here. Your manual result overrides the grader.</p>
-        </div>
-        <form action={manualGradeBet} className="grade-actions">
-          <input type="hidden" name="id" value={bet.id} />
-          <button type="submit" name="result" value="win" className="grade-win">Win</button>
-          <button type="submit" name="result" value="loss" className="grade-loss">Loss</button>
-          <button type="submit" name="result" value="push">Push</button>
-          <button type="submit" name="result" value="void">Void</button>
-          <button type="submit" name="result" value="auto" className="grade-auto">Return to auto grading</button>
-        </form>
-      </section>
+      {owner ? (
+        <section className="owner-grade-card">
+          <div>
+            <span className="eyebrow">OWNER CONTROL</span>
+            <h2>Correct result</h2>
+            <p>If automation misses one, fix it here. Your manual result overrides the grader.</p>
+          </div>
+          <form action={manualGradeBet} className="grade-actions">
+            <input type="hidden" name="id" value={bet.id} />
+            <button type="submit" name="result" value="win" className="grade-win">Win</button>
+            <button type="submit" name="result" value="loss" className="grade-loss">Loss</button>
+            <button type="submit" name="result" value="push">Push</button>
+            <button type="submit" name="result" value="void">Void</button>
+            <button type="submit" name="result" value="auto" className="grade-auto">Return to auto grading</button>
+          </form>
+        </section>
+      ) : null}
 
       {bet.post_text ? (
         <section className="tweet-card">
