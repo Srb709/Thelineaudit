@@ -61,7 +61,8 @@ async function rpc<T>(name: string): Promise<T> {
 }
 
 export async function getPublicBets() {
-  return rpc<PublicBet[]>("get_public_bets");
+  const bets = await rpc<PublicBet[]>("get_public_bets");
+  return bets.filter((bet) => bet.status !== "pending");
 }
 
 export async function getRoiSummary() {
