@@ -21,7 +21,7 @@ export default function HistoryList({ bets }: { bets: PublicBet[] }) {
         {sports.map((item) => <button key={item} className={sport === item ? "active" : ""} onClick={() => setSport(item)}>{item}</button>)}
       </div>
       <div className="segmented">
-        {["All", "Win", "Loss", "Pending"].map((item) => <button key={item} className={status === item ? "active" : ""} onClick={() => setStatus(item)}>{item}</button>)}
+        {["All", "Win", "Loss", "Push", "Void"].map((item) => <button key={item} className={status === item ? "active" : ""} onClick={() => setStatus(item)}>{item}</button>)}
       </div>
       <div className="list">
         {filtered.length ? filtered.map((bet) => <BetRow key={bet.id} bet={bet} />) : <div className="empty">No plays in this filter.</div>}
