@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { BetRow } from "../components";
-import { formatRoi, formatUnits, getPublicBets, getRoiSummary } from "@/lib/data";
+import { formatDate, formatOdds, formatRoi, formatUnits, getPublicBets, getRoiSummary } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "TheLineAudit Results",
-  description: "Settled TheLineAudit bets only. No open positions are shown here.",
+  description: "Settled TheLineAudit bets only.",
 };
 
 export default async function ResultsPage() {
@@ -23,7 +22,7 @@ export default async function ResultsPage() {
       <section className="hero compact">
         <span className="eyebrow">THELINEAUDIT RESULTS</span>
         <h1>Every finished bet.</h1>
-        <p>Settled plays only. Open positions stay private until they are graded.</p>
+        <p>Settled plays only. Full record, units and ROI.</p>
       </section>
 
       <div className="stat-grid three">
@@ -35,7 +34,23 @@ export default async function ResultsPage() {
       <section>
         <div className="section-head"><h2>Latest results</h2><span>{settled.length} graded</span></div>
         <div className="list">
-          {settled.length ? settled.map((bet) => <BetRow key={bet.id} bet={bet} />) : <div className="empty">No graded results yet.</div>}
+          {settled.length ? settled.map((bet) => (
+            <div className="bet-row" key={bet.id}>
+              <div className="bet-top">
+                <span className="league">{bet.sport}</span>
+                <span className="date">{formatDate(bet.event_date || bet.created_at)}</span>
+              </div>
+              <div className="selection">{bet.selection}</div>
+              <div className="bet-bottom">
+                <span>{Number(bet.target_profit_units)}u to win</span>
+                <b>{formatOdds(Number(bet.american_odds))}</b>
+                <span className={`result ${bet.status}`}>
+                  {bet.status}
+                  <em>{formatUnits(bet.net_units)}</em>
+                </span>
+              </div>
+            </div>
+          )) : <div className="empty">No graded results yet.</div>}
         </div>
       </section>
     </main>
