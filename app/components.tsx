@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import type { PublicBet } from "@/lib/data";
 import { formatDate, formatOdds, formatUnits } from "@/lib/data";
@@ -7,6 +10,12 @@ export function Mark() {
 }
 
 export function BottomNav() {
+  const pathname = usePathname();
+
+  if (pathname === "/results" || pathname.startsWith("/results/")) {
+    return null;
+  }
+
   return (
     <nav className="bottom-nav" aria-label="Main navigation">
       <Link href="/"><span className="nav-icon today">●</span><span>Today</span></Link>
